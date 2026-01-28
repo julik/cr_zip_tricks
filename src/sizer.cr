@@ -25,16 +25,29 @@ class ZipTricks::Sizer
     @streamer = streamer
   end
 
-  def predeclare_entry(filename : String, uncompressed_size : Int, compressed_size : Int, use_data_descriptor : Bool = false)
-    @streamer.predeclare_entry(filename: filename,
-      uncompressed_size: uncompressed_size,
-      compressed_size: compressed_size,
-      use_data_descriptor: use_data_descriptor,
-      crc32: 0,
-      storage_mode: 0)
-    @streamer.advance(compressed_size)
+  # Predeclare an entry with known sizes for size calculation.
+  # Use storage_mode: ZipTricks::Streamer::DEFLATED for compressed entries.
+  def predeclare_entry(filename : String, uncompressed_size : Int, compressed_size : Int, use_data_descriptor : Bool = false, storage_mode : Int = ZipTricks::Streamer::STORED)
+    if storage_mode == ZipTricks::Streamer::DEFLATED
+      @streamer.add_deflated_entry(
+        filename: filename,
+        compressed_size: compressed_size,
+        uncompressed_size: uncompressed_size,
+        crc32: 0,
+        use_data_descriptor: use_data_descriptor)
+    else
+      @streamer.add_stored_entry(
+        filename: filename,
+        size: compressed_size,
+        crc32: 0,
+        use_data_descriptor: use_data_descriptor)
+    end
+    @streamer.simulate_write(compressed_size)
     if use_data_descriptor
-      @streamer.write_data_descriptor_for_last_entry
+      @streamer.update_last_entry_and_write_data_descriptor(
+        crc32: 0,
+        compressed_size: compressed_size,
+        uncompressed_size: uncompressed_size)
     end
   end
 end
