@@ -18,28 +18,21 @@ class ZipTricks::Writer
   VERSION_NEEDED_TO_EXTRACT       = 20
   VERSION_NEEDED_TO_EXTRACT_ZIP64 = 45
 
+  DEFAULT_FILE_UNIX_PERMISSIONS      = 0o644
+  DEFAULT_DIRECTORY_UNIX_PERMISSIONS = 0o755
+  FILE_TYPE_FILE                     = 0o10
+  FILE_TYPE_DIRECTORY                = 0o04
+
   # A combination of the VERSION_MADE_BY low byte and the OS type high byte
   # VERSION_MADE_BY = 52
   # os_type = 3 # UNIX
   # [VERSION_MADE_BY, os_type].pack('CC')
   MADE_BY_SIGNATURE = Bytes[52, 3]
 
-  def file_external_attrs
-    # These need to be set so that the unarchived files do not become executable on UNIX, for
-    # security purposes. Strictly speaking we would want to make this user-customizable,
-    # but for now just putting in sane defaults will do. For example, Trac with zipinfo does this:
-    # zipinfo.external_attr = 0644 << 16L # permissions -r-wr--r--.
-    # We snatch the incantations from Rubyzip for this.
-    unix_perms = 0o644
-    file_type_file = 0o10
-    ((file_type_file << 12 | (unix_perms & 0o7777)) << 16).to_u32!
-  end
-
-  def dir_external_attrs
-    # Applies permissions to an empty directory.
-    unix_perms = 0o755
-    file_type_dir = 0o04
-    ((file_type_dir << 12 | (unix_perms & 0o7777)) << 16).to_u32!
+  # Generates the external file attributes value for a ZIP entry.
+  # The high 16 bits contain UNIX file type and permissions.
+  def generate_external_attrs(unix_permissions : Int, file_type : Int)
+    ((file_type << 12 | (unix_permissions & 0o7777)) << 16).to_u32!
   end
 
   private def to_binary_dos_time(t : Time)
@@ -143,7 +136,7 @@ class ZipTricks::Writer
     IO.copy(extra_fields_io, io)
   end
 
-  def write_central_directory_file_header(io : IO, filename : String, compressed_size : ZipFilesize, uncompressed_size : ZipFilesize, crc32 : ZipCRC32, gp_flags : ZipGpFlags, mtime : Time, storage_mode : ZipStorageMode, local_file_header_location : ZipLocation)
+  def write_central_directory_file_header(io : IO, filename : String, compressed_size : ZipFilesize, uncompressed_size : ZipFilesize, crc32 : ZipCRC32, gp_flags : ZipGpFlags, mtime : Time, storage_mode : ZipStorageMode, local_file_header_location : ZipLocation, unix_permissions : Int? = nil)
     # At this point if the header begins somewhere beyound 0xFFFFFFFF we _have_ to record the offset
     # of the local file header as a zip64 extra field, so we give up, give in, you loose, love will always win...
     add_zip64 = (local_file_header_location > FOUR_BYTE_MAX_UINT) || (compressed_size > FOUR_BYTE_MAX_UINT) || (uncompressed_size > FOUR_BYTE_MAX_UINT)
@@ -183,7 +176,13 @@ class ZipTricks::Writer
     # Because the add_empty_directory method will create a directory with a trailing "/",
     # this check can be used to assign proper permissions to the created directory.
     # external file attributes        4 bytes
-    exattrs = filename.ends_with?('/') ? dir_external_attrs : file_external_attrs
+    exattrs = if filename.ends_with?('/')
+                perms = unix_permissions || DEFAULT_DIRECTORY_UNIX_PERMISSIONS
+                generate_external_attrs(perms, FILE_TYPE_DIRECTORY)
+              else
+                perms = unix_permissions || DEFAULT_FILE_UNIX_PERMISSIONS
+                generate_external_attrs(perms, FILE_TYPE_FILE)
+              end
     write_uint32_le(io, exattrs)
 
     entry_header_offset = add_zip64 ? FOUR_BYTE_MAX_UINT : local_file_header_location
@@ -315,7 +314,7 @@ class ZipTricks::Writer
     #       bit 1           if set, access time is present
     #       bit 2           if set, creation time is present
     #       bits 3-7        reserved for additional timestamps; not set
-    flags = 0b10000000                # Set bit 1 only to indicate only mtime is present
+    flags = 0b00000001                # Set bit 0 only to indicate only mtime is present
     write_uint16_le(io, 0x5455)       # tag for this extra block type ("UT")
     write_uint16_le(io, 1 + 4)        # # the size of this block (1 byte used for the Flag + 1 long used for the timestamp)
     write_uint8_le(io, flags)         # encode a single byte

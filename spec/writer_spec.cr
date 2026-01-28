@@ -75,7 +75,7 @@ describe ZipTricks::Writer do
 
       br.read_2b.should eq(0x5455) # Extended timestamp extra tag
       br.read_2b.should eq(5)      # Size of the timestamp extra
-      br.read_1b.should eq(128)    # The timestamp flag
+      br.read_1b.should eq(1)      # The timestamp flag, with only the lowest bit set
 
       ext_mtime = br.read_4b_signed
       ext_mtime.should eq(1_468_763_280) # The mtime encoded as a 4byte uint
@@ -274,6 +274,80 @@ describe ZipTricks::Writer do
       br.read_4b.should eq(1_106_051_072)                        # external file attributes
       br.read_4b.should eq(898_921)                              # relative offset of local header
       br.read_string_of(23).should eq("this-is-here-directory/") # the filename
+    end
+
+    it "writes the file header with custom UNIX permissions" do
+      buf = IO::Memory.new
+
+      ZipTricks::Writer.new.write_central_directory_file_header(io: buf,
+        local_file_header_location: 898_921,
+        gp_flags: 555,
+        storage_mode: 23,
+        compressed_size: 901,
+        uncompressed_size: 909_102,
+        mtime: Time.utc(2016, 2, 2, 14, 0),
+        crc32: 89_765,
+        filename: "a-file.txt",
+        unix_permissions: 0o633)
+
+      br = ByteReader.new(buf)
+      br.read_4b.should eq(0x02014b50) # Central directory entry sig
+      br.read_2b.should eq(820)        # version made by
+      br.read_2b.should eq(20)         # version need to extract
+      br.read_2b.should eq(555)        # general purpose bit flag (explicitly
+      # set to bogus value to ensure we pass it through)
+      br.read_2b.should eq(23)                      # compression method (explicitly set to bogus value)
+      br.read_2b.should eq(28_672)                  # last mod file time
+      br.read_2b.should eq(18_498)                  # last mod file date
+      br.read_4b.should eq(89_765)                  # crc32
+      br.read_4b.should eq(901)                     # compressed size
+      br.read_4b.should eq(909_102)                 # uncompressed size
+      br.read_2b.should eq(10)                      # filename length
+      br.read_2b.should eq(9)                       # extra field length
+      br.read_2b.should eq(0)                       # file comment
+      br.read_2b.should eq(0)                       # disk number, must be blanked to the
+      # maximum value because of The Unarchiver bug
+      br.read_2b.should eq(0)                       # internal file attributes
+      br.read_4b.should eq(2_174_418_944)           # external file attributes (0o633 file)
+      br.read_4b.should eq(898_921)                 # relative offset of local header
+      br.read_string_of(10).should eq("a-file.txt") # the filename
+    end
+
+    it "writes the file header for an entry that contains an empty directory with custom UNIX permissions" do
+      buf = IO::Memory.new
+
+      ZipTricks::Writer.new.write_central_directory_file_header(io: buf,
+        local_file_header_location: 898_921,
+        gp_flags: 555,
+        storage_mode: 23,
+        compressed_size: 0,
+        uncompressed_size: 0,
+        mtime: Time.utc(2016, 2, 2, 14, 0),
+        crc32: 0,
+        filename: "directory/",
+        unix_permissions: 0o777)
+
+      br = ByteReader.new(buf)
+      br.read_4b.should eq(0x02014b50) # Central directory entry sig
+      br.read_2b.should eq(820)        # version made by
+      br.read_2b.should eq(20)         # version need to extract
+      br.read_2b.should eq(555)        # general purpose bit flag (explicitly
+      # set to bogus value to ensure we pass it through)
+      br.read_2b.should eq(23)                   # compression method (explicitly set to bogus value)
+      br.read_2b.should eq(28_672)               # last mod file time
+      br.read_2b.should eq(18_498)               # last mod file date
+      br.read_4b.should eq(0)                    # crc32
+      br.read_4b.should eq(0)                    # compressed size
+      br.read_4b.should eq(0)                    # uncompressed size
+      br.read_2b.should eq(10)                   # filename length
+      br.read_2b.should eq(9)                    # extra field length
+      br.read_2b.should eq(0)                    # file comment
+      br.read_2b.should eq(0)                    # disk number, must be blanked to the
+      # maximum value because of The Unarchiver bug
+      br.read_2b.should eq(0)                    # internal file attributes
+      br.read_4b.should eq(1_107_230_720)        # external file attributes (0o777 directory)
+      br.read_4b.should eq(898_921)              # relative offset of local header
+      br.read_string_of(10).should eq("directory/") # the filename
     end
 
     it "writes the file header for an entry that requires Zip64 extra because of \
