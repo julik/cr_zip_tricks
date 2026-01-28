@@ -11,7 +11,7 @@ class ZipTricks::Sizer
     end
   end
 
-  def self.size
+  def self.size(&)
     streamer = ZipTricks::Streamer.new(NullIO.new)
     sizer = new(streamer)
 

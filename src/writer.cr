@@ -20,8 +20,8 @@ class ZipTricks::Writer
 
   DEFAULT_FILE_UNIX_PERMISSIONS      = 0o644
   DEFAULT_DIRECTORY_UNIX_PERMISSIONS = 0o755
-  FILE_TYPE_FILE                     = 0o10
-  FILE_TYPE_DIRECTORY                = 0o04
+  FILE_TYPE_FILE                     =  0o10
+  FILE_TYPE_DIRECTORY                =  0o04
 
   # A combination of the VERSION_MADE_BY low byte and the OS type high byte
   # VERSION_MADE_BY = 52

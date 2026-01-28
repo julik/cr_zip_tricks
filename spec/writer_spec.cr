@@ -296,16 +296,16 @@ describe ZipTricks::Writer do
       br.read_2b.should eq(20)         # version need to extract
       br.read_2b.should eq(555)        # general purpose bit flag (explicitly
       # set to bogus value to ensure we pass it through)
-      br.read_2b.should eq(23)                      # compression method (explicitly set to bogus value)
-      br.read_2b.should eq(28_672)                  # last mod file time
-      br.read_2b.should eq(18_498)                  # last mod file date
-      br.read_4b.should eq(89_765)                  # crc32
-      br.read_4b.should eq(901)                     # compressed size
-      br.read_4b.should eq(909_102)                 # uncompressed size
-      br.read_2b.should eq(10)                      # filename length
-      br.read_2b.should eq(9)                       # extra field length
-      br.read_2b.should eq(0)                       # file comment
-      br.read_2b.should eq(0)                       # disk number, must be blanked to the
+      br.read_2b.should eq(23)      # compression method (explicitly set to bogus value)
+      br.read_2b.should eq(28_672)  # last mod file time
+      br.read_2b.should eq(18_498)  # last mod file date
+      br.read_4b.should eq(89_765)  # crc32
+      br.read_4b.should eq(901)     # compressed size
+      br.read_4b.should eq(909_102) # uncompressed size
+      br.read_2b.should eq(10)      # filename length
+      br.read_2b.should eq(9)       # extra field length
+      br.read_2b.should eq(0)       # file comment
+      br.read_2b.should eq(0)       # disk number, must be blanked to the
       # maximum value because of The Unarchiver bug
       br.read_2b.should eq(0)                       # internal file attributes
       br.read_4b.should eq(2_174_418_944)           # external file attributes (0o633 file)
@@ -333,20 +333,20 @@ describe ZipTricks::Writer do
       br.read_2b.should eq(20)         # version need to extract
       br.read_2b.should eq(555)        # general purpose bit flag (explicitly
       # set to bogus value to ensure we pass it through)
-      br.read_2b.should eq(23)                   # compression method (explicitly set to bogus value)
-      br.read_2b.should eq(28_672)               # last mod file time
-      br.read_2b.should eq(18_498)               # last mod file date
-      br.read_4b.should eq(0)                    # crc32
-      br.read_4b.should eq(0)                    # compressed size
-      br.read_4b.should eq(0)                    # uncompressed size
-      br.read_2b.should eq(10)                   # filename length
-      br.read_2b.should eq(9)                    # extra field length
-      br.read_2b.should eq(0)                    # file comment
-      br.read_2b.should eq(0)                    # disk number, must be blanked to the
+      br.read_2b.should eq(23)     # compression method (explicitly set to bogus value)
+      br.read_2b.should eq(28_672) # last mod file time
+      br.read_2b.should eq(18_498) # last mod file date
+      br.read_4b.should eq(0)      # crc32
+      br.read_4b.should eq(0)      # compressed size
+      br.read_4b.should eq(0)      # uncompressed size
+      br.read_2b.should eq(10)     # filename length
+      br.read_2b.should eq(9)      # extra field length
+      br.read_2b.should eq(0)      # file comment
+      br.read_2b.should eq(0)      # disk number, must be blanked to the
       # maximum value because of The Unarchiver bug
-      br.read_2b.should eq(0)                    # internal file attributes
-      br.read_4b.should eq(1_107_230_720)        # external file attributes (0o777 directory)
-      br.read_4b.should eq(898_921)              # relative offset of local header
+      br.read_2b.should eq(0)                       # internal file attributes
+      br.read_4b.should eq(1_107_230_720)           # external file attributes (0o777 directory)
+      br.read_4b.should eq(898_921)                 # relative offset of local header
       br.read_string_of(10).should eq("directory/") # the filename
     end
 

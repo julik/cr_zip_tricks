@@ -60,7 +60,7 @@ class ZipTricks::Streamer
     @writer = ZipTricks::Writer.new
   end
 
-  def self.archive(io : IO)
+  def self.archive(io : IO, &)
     streamer = new(io)
     yield streamer
     streamer.finish
@@ -185,7 +185,7 @@ class ZipTricks::Streamer
     @io.offset
   end
 
-  def add_stored(filename : String, modification_time : Time = Time.utc, unix_permissions : Int? = nil)
+  def add_stored(filename : String, modification_time : Time = Time.utc, unix_permissions : Int? = nil, &)
     add_file_and_write_local_header(
       filename: filename,
       modification_time: modification_time,
@@ -208,7 +208,7 @@ class ZipTricks::Streamer
     write_data_descriptor_for_last_entry
   end
 
-  def add_deflated(filename : String, modification_time : Time = Time.utc, unix_permissions : Int? = nil)
+  def add_deflated(filename : String, modification_time : Time = Time.utc, unix_permissions : Int? = nil, &)
     add_file_and_write_local_header(
       filename: filename,
       modification_time: modification_time,
@@ -322,7 +322,7 @@ class ZipTricks::Streamer
     compressed_size : Int,
     uncompressed_size : Int,
     unix_permissions : Int?,
-    use_data_descriptor : Bool
+    use_data_descriptor : Bool,
   )
     # Clean backslashes
     filename = remove_backslash(filename)

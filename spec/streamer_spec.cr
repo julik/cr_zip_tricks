@@ -141,7 +141,7 @@ describe ZipTricks::Streamer do
 
     it "raises Overflow for filenames that are too long" do
       buf = IO::Memory.new
-      long_filename = "a" * 70000  # > 0xFFFF bytes
+      long_filename = "a" * 70000 # > 0xFFFF bytes
       expect_raises(ZipTricks::Streamer::Overflow) do
         ZipTricks::Streamer.archive(buf) do |s|
           s.add_stored(long_filename) { |io| io << "content" }
