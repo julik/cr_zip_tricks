@@ -1,6 +1,6 @@
 # cr_zip_tricks
 
-An alternate ZIP writer for Crystal, ported from [zip_tricks for Ruby](https://github.com/WeTransfer/zip_tricks)
+An alternate ZIP writer for Crystal, ported from [zip_tricks for Ruby](https://github.com/julik/zip_tricks)
 
 ## Installation
 
@@ -8,7 +8,7 @@ An alternate ZIP writer for Crystal, ported from [zip_tricks for Ruby](https://g
 ```yaml
 dependencies:
   cr_zip_tricks:
-    github: WeTransfer/cr_zip_tricks
+    github: julik/cr_zip_tricks
 ```
 2. Run `shards install`
 
@@ -74,7 +74,7 @@ TODO: Write development instructions here
 
 ## Contributing
 
-1. Fork it (<https://github.com/WeTransfer/cr_zip_tricks/fork>)
+1. Fork it (<https://github.com/julik/cr_zip_tricks/fork>)
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
